@@ -66,4 +66,35 @@ TOTAL: $7.97
 """
         XCTAssertEqual(expectedReceipt, receipt.output())
     }
+    
+    // Test TwoForOne
+    func testTwoForOneThreeItems() {
+        register = Register(pricing: TwoForOnePricing())
+        register.scan(Item(name: "Beans (8oz Can)", priceEach: 199))
+        register.scan(Item(name: "Beans (8oz Can)", priceEach: 199))
+        register.scan(Item(name: "Beans (8oz Can)", priceEach: 199))
+        
+        let receipt = register.total()
+        XCTAssertEqual(199 * 2, receipt.total())
+    }
+    
+    func testTwoForOneTwoItems() {
+        register = Register(pricing: TwoForOnePricing())
+        register.scan(Item(name: "Beans (8oz Can)", priceEach: 199))
+        register.scan(Item(name: "Beans (8oz Can)", priceEach: 199))
+        
+        let receipt = register.total()
+        XCTAssertEqual(199 * 2, receipt.total())
+    }
+    
+    func testTwoForOneFourItems() {
+        register = Register(pricing: TwoForOnePricing())
+        register.scan(Item(name: "Beans (8oz Can)", priceEach: 199))
+        register.scan(Item(name: "Beans (8oz Can)", priceEach: 199))
+        register.scan(Item(name: "Beans (8oz Can)", priceEach: 199))
+        register.scan(Item(name: "Beans (8oz Can)", priceEach: 199))
+        
+        let receipt = register.total()
+        XCTAssertEqual(199 * 3, receipt.total())
+    }
 }

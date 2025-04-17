@@ -12,6 +12,11 @@ protocol SKU {
     func price() -> Int
 }
 
+// Given a list, give me total after applying rule
+protocol PricingScheme {
+    func apply(for items: [SKU]) -> Int
+}
+
 class Item : SKU {
     let name : String
     private let itemPrice: Int
@@ -26,8 +31,37 @@ class Item : SKU {
     }
 }
 
+class TwoForOnePricing: PricingScheme {
+    func apply(for items: [any SKU]) -> Int {
+        var grouped: [String: [SKU]] = [:]
+        
+        for item in items {
+            grouped[item.name, default: []].append(item)
+        }
+        
+        var total = 0
+        
+        for group in grouped.values {
+            let count = group.count
+            let price = group.first!.price()
+            
+            let grouped = count/3 //3->2
+            let remain = count % 3
+            
+            total += (grouped * 2 + remain) * price
+        }
+        return total
+    }
+}
+
+
 class Receipt {
     private var scannedItems: [SKU] = []
+    private var pricing: PricingScheme?
+    
+    init(pricing: PricingScheme? = nil) {
+        self.pricing = pricing
+    }
 
     func add(_ item: SKU) {
         scannedItems.append(item)
@@ -50,7 +84,11 @@ class Receipt {
     }
     
     func total() -> Int {
-        return scannedItems.reduce(0) { $0 + $1.price() }
+        if let scheme = pricing {
+            return scheme.apply(for: scannedItems)
+        } else {
+            return scannedItems.reduce(0) { $0 + $1.price() }
+        }
     }
 
 
@@ -61,6 +99,12 @@ class Receipt {
 
 class Register {
     private var currentReceipt = Receipt()
+    private var pricing: PricingScheme?
+    
+    init(pricing: PricingScheme? = nil) {
+        self.pricing = pricing
+        self.currentReceipt = Receipt(pricing: pricing)
+    }
 
     func scan(_ item: SKU) {
         currentReceipt.add(item)
@@ -83,4 +127,3 @@ class Store {
         return "Hello world"
     }
 }
-
