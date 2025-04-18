@@ -89,6 +89,9 @@ class GroupPricing: PricingScheme {
         var total = 0
         
         // calc discount pairs price
+        // Limitation: grouped discount happen in scanned order.
+        //             3 Ketchup 2 bear
+        //             the 3rd ketchup won't be discounted no matter price
         for i in 0..<pairCount {
             let discounted1 = Int(Double(group1Items[i].price()) * (1.0 - discount))
             let discounted2 = Int(Double(group2Items[i].price()) * (1.0 - discount))
@@ -108,6 +111,58 @@ class GroupPricing: PricingScheme {
             total += item.price()
         }
         
+        return total
+    }
+}
+
+
+class Coupon: PricingScheme {
+    private let keyword1: String
+    private let discount: Double
+    
+    init(item1: String,  discount: Double) {
+        self.keyword1 = item1.lowercased()
+        self.discount = discount
+    }
+    
+    func apply(for items: [any SKU]) -> Int {
+        var matchedItems: [SKU] = []
+        var normalItems: [SKU] = []
+        
+        // split in to groups
+        for item in items {
+            if item.name.lowercased().contains(keyword1) {
+                matchedItems.append(item)
+            } else {
+                normalItems.append(item)
+            }
+        }
+
+        // Find the cheapest matched item
+        let discountedItem = matchedItems.min(by: { $0.price() < $1.price() })
+
+        var total = 0
+
+        if let itemToDiscount = discountedItem {
+            // Apply discount to the cheapest one
+            let discountedPrice = Int(Double(itemToDiscount.price()) * (1.0 - discount))
+            total += discountedPrice
+
+            // Add the rest of the matched items (without discount)
+            for item in matchedItems {
+                if ObjectIdentifier(item as AnyObject) != ObjectIdentifier(itemToDiscount as AnyObject) {
+                    total += item.price()
+                }
+            }
+        } else {
+            // No matches found, skip
+        }
+
+        // Add all normal items
+        for item in normalItems {
+            total += item.price()
+        }
+
         return total
     }
 }

@@ -148,5 +148,41 @@ TOTAL: $7.97
         let receipt = register.total()
         XCTAssertEqual(expectedTotal, receipt.total())
     }
+    
+    // Coupon test
+    func testCouponOneBean() {
+        let coupon = Coupon(item1: "beans", discount: 0.15)
+        register = Register(pricing: coupon)
+        
+        register.scan(Item(name: "Beans (8oz Can)", priceEach: 199))
+        
+        let receipt = register.total()
+        let expectedTotal = Int(Double(199) * 0.85)
+        XCTAssertEqual(expectedTotal, receipt.total())
+    }
+    
+    func testCouponTwoBeansDifferentPrices() {
+        let coupon = Coupon(item1: "beans", discount: 0.15)
+        register = Register(pricing: coupon)
 
+        register.scan(Item(name: "Beans (8oz Can)", priceEach: 199))
+        register.scan(Item(name: "Beans (16oz Can)", priceEach: 299))
+
+        let expectedTotal = Int(Double(199) * 0.85) + 299
+        let receipt = register.total()
+        XCTAssertEqual(expectedTotal, receipt.total())
+    }
+    
+    func testCouponNoBeans() {
+        let coupon = Coupon(item1: "beans", discount: 0.15)
+        register = Register(pricing: coupon)
+
+        register.scan(Item(name: "Apple", priceEach: 100))
+        register.scan(Item(name: "Banana", priceEach: 150))
+
+        let expectedTotal = 100 + 150
+        let receipt = register.total()
+        XCTAssertEqual(expectedTotal, receipt.total())
+    }
+    
 }
