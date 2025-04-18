@@ -149,6 +149,42 @@ TOTAL: $7.97
         XCTAssertEqual(expectedTotal, receipt.total())
     }
     
+    // Weight test
+    func testWeightSingle(){
+        register = Register()
+
+        let steak = WeightItem(name: "Steak", pricePerPound: 899, weight: 1.5)
+        register.scan(steak)
+
+        let receipt = register.total()
+        XCTAssertEqual(Int(Double(899)*1.5), receipt.total())
+    }
+    
+    func testWeightDouble(){
+        register = Register()
+
+        let steak = WeightItem(name: "Steak", pricePerPound: 899, weight: 1.5)
+        register.scan(steak)
+        let apple = WeightItem(name: "Apple", pricePerPound: 199, weight: 2.5)
+        register.scan(apple)
+
+        let receipt = register.total()
+        XCTAssertEqual(Int(Double(899)*1.5) + Int(Double(199)*2.5), receipt.total())
+    }
+    
+    func testWeightMix(){
+        register = Register()
+
+        let steak = WeightItem(name: "Steak", pricePerPound: 899, weight: 1.5)
+        register.scan(steak)
+        register.scan(Item(name: "Beans (8oz Can)", priceEach: 199))
+
+        let receipt = register.total()
+        let expectedTotal = Int(Double(899)*1.5) + 199
+        XCTAssertEqual(expectedTotal, receipt.total())
+    }
+    
+    
     // Coupon test
     func testCouponOneBean() {
         let coupon = Coupon(item1: "beans", discount: 0.15)

@@ -115,7 +115,25 @@ class GroupPricing: PricingScheme {
     }
 }
 
+// Extra 3
+class WeightItem: SKU {
+    let name: String
+    private let pricePerPound: Int
+    private let weight: Double
+    
+    init(name: String, pricePerPound: Int, weight: Double) {
+        self.name = name
+        self.pricePerPound = pricePerPound
+        self.weight = weight
+    }
+    
+    func price() -> Int {
+        return Int(Double(pricePerPound) * weight)
+    }
+}
 
+
+// Extra 4
 class Coupon: PricingScheme {
     private let keyword1: String
     private let discount: Double
