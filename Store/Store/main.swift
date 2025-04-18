@@ -17,6 +17,7 @@ protocol PricingScheme {
     func apply(for items: [SKU]) -> Int
 }
 
+
 class Item : SKU {
     let name : String
     private let itemPrice: Int
@@ -119,7 +120,7 @@ class GroupPricing: PricingScheme {
 class WeightItem: SKU {
     let name: String
     private let pricePerPound: Int
-    private let weight: Double
+    let weight: Double
     
     init(name: String, pricePerPound: Int, weight: Double) {
         self.name = name
@@ -129,6 +130,10 @@ class WeightItem: SKU {
     
     func price() -> Int {
         return Int(Double(pricePerPound) * weight)
+    }
+    
+    func pricePerUnit() -> Int {
+        return pricePerPound
     }
 }
 
@@ -182,6 +187,54 @@ class Coupon: PricingScheme {
         }
 
         return total
+    }
+}
+
+// Extra 5
+class RainCheck: PricingScheme {
+    private let keyword: String
+    private let substitutePrice: Int
+    private let maxWeight: Double?
+    
+    init(item: String, substitutePrice: Int, maxWeight: Double? = nil) {
+        self.keyword = item.lowercased()
+        self.substitutePrice = substitutePrice
+        self.maxWeight = maxWeight
+    }
+
+    func apply(for items: [SKU]) -> Int {
+        var total = 0
+        var rainCheckUsed = false
+
+        for item in items {
+            let name = item.name.lowercased()
+            if !rainCheckUsed && name.contains(keyword) {
+                // Weight Item
+                if let maxWeight = maxWeight, let weighed = item as? WeightItem {
+                    let coveredWeight = min(maxWeight, weighed.weight)
+                    let remainingWeight = weighed.weight - coveredWeight
+
+                    let coveredCost = substitutePrice
+                    let remainingCost = Int(Double(weighed.pricePerUnit()) * remainingWeight)
+
+                    total += coveredCost + remainingCost
+                    rainCheckUsed = true
+                }
+                // Per-unit item: replace full price
+                else {
+                    total += substitutePrice
+                    rainCheckUsed = true
+                }
+            } else {
+                total += item.price()
+            }
+        }
+
+        return total
+    }
+
+    private func weighedWeight(_ item: WeightItem) -> Double {
+        return Mirror(reflecting: item).children.first { $0.label == "weight" }?.value as? Double ?? 0.0
     }
 }
 

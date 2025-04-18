@@ -221,4 +221,41 @@ TOTAL: $7.97
         XCTAssertEqual(expectedTotal, receipt.total())
     }
     
+    // Rain test
+    
+    func testRainUnit() {
+        let rainCheck = RainCheck(item: "beans", substitutePrice: 129)
+        register = Register(pricing: rainCheck)
+        
+        register.scan(Item(name: "Beans (8oz Can)", priceEach: 199))
+        register.scan(Item(name: "Beans (8oz Can)", priceEach: 199))
+        
+        let receipt = register.total()
+        XCTAssertEqual(129 + 199, receipt.total())
+    }
+    
+    func testRainWeightMore() {
+        let rainCheck = RainCheck(item: "steak", substitutePrice: 799, maxWeight: 1.0)
+        register = Register(pricing: rainCheck)
+        
+        let steak = WeightItem(name: "Steak", pricePerPound: 899, weight: 1.5)
+        register.scan(steak)
+        let receipt = register.total()
+        
+        let expectedTotal = 799 + Int(Double(899) * 0.5)
+        XCTAssertEqual(expectedTotal, receipt.total())
+    }
+    
+    func testRainWeightLess() {
+        let rainCheck = RainCheck(item: "steak", substitutePrice: 799, maxWeight: 1.0)
+        register = Register(pricing: rainCheck)
+        
+        let steak = WeightItem(name: "Steak", pricePerPound: 899, weight: 0.7)
+        register.scan(steak)
+        let receipt = register.total()
+        
+        XCTAssertEqual(799, receipt.total())
+    }
+
+    
 }
