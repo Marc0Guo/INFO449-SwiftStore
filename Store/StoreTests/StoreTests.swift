@@ -82,9 +82,11 @@ TOTAL: $7.97
         register = Register(pricing: TwoForOnePricing())
         register.scan(Item(name: "Beans (8oz Can)", priceEach: 199))
         register.scan(Item(name: "Beans (8oz Can)", priceEach: 199))
+        register.scan(Item(name: "Pencil", priceEach: 99))
+        register.scan(Item(name: "Pencil", priceEach: 99))
         
         let receipt = register.total()
-        XCTAssertEqual(199 * 2, receipt.total())
+        XCTAssertEqual(199 * 2 + 99 * 2, receipt.total())
     }
     
     func testTwoForOneFourItems() {
@@ -97,4 +99,54 @@ TOTAL: $7.97
         let receipt = register.total()
         XCTAssertEqual(199 * 3, receipt.total())
     }
+    
+    // Test grouping
+    func testGroupedPricingBasic() {
+        let pricing = GroupPricing(group1: "ketchup", group2: "beer", discount: 0.10)
+
+        register = Register(pricing: pricing)
+
+        register.scan(Item(name: "A Ketchup", priceEach: 300))
+        register.scan(Item(name: "A Beer", priceEach: 500))
+        register.scan(Item(name: "B Ketchup", priceEach: 300))
+        register.scan(Item(name: "B Beer", priceEach: 500))
+
+        let receipt = register.total()
+        let expectedTotal = Int(Double(300) * 0.9) * 2 + Int(Double(500) * 0.9) * 2
+        XCTAssertEqual(expectedTotal, receipt.total())
+    }
+    
+    func testGroupedPricingExtraKetchup() {
+        let pricing = GroupPricing(group1: "ketchup", group2: "beer", discount: 0.10)
+
+        register = Register(pricing: pricing)
+
+        register.scan(Item(name: "A Ketchup", priceEach: 300))
+        register.scan(Item(name: "A Beer", priceEach: 500))
+        register.scan(Item(name: "A Ketchup", priceEach: 300))
+        register.scan(Item(name: "B Beer", priceEach: 500))
+        register.scan(Item(name: "C Ketchup", priceEach: 300))
+
+        let discountedKetchups = Int(Double(300) * 0.9) * 2
+        let discountedBeers = Int(Double(500) * 0.9) * 2
+        let fullPriceKetchup = 300
+        let expectedTotal = discountedKetchups + discountedBeers + fullPriceKetchup
+        let receipt = register.total()
+        XCTAssertEqual(expectedTotal, receipt.total())
+    }
+    
+    func testGroupedPricingOnlyKetchup() {
+        let pricing = GroupPricing(group1: "ketchup", group2: "beer", discount: 0.10)
+
+        register = Register(pricing: pricing)
+
+        register.scan(Item(name: "A Ketchup", priceEach: 300))
+        register.scan(Item(name: "B Ketchup", priceEach: 300))
+        register.scan(Item(name: "Pencil", priceEach: 100))
+
+        let expectedTotal = 300 + 300 + 100
+        let receipt = register.total()
+        XCTAssertEqual(expectedTotal, receipt.total())
+    }
+
 }

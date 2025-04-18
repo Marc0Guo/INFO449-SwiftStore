@@ -30,7 +30,7 @@ class Item : SKU {
         return itemPrice
     }
 }
-
+// Extra 1
 class TwoForOnePricing: PricingScheme {
     func apply(for items: [any SKU]) -> Int {
         var grouped: [String: [SKU]] = [:]
@@ -54,6 +54,63 @@ class TwoForOnePricing: PricingScheme {
     }
 }
 
+// Extra 2
+class GroupPricing: PricingScheme {
+    private let keyword1: String
+    private let keyword2: String
+    private let discount: Double
+    
+    init(group1: String, group2: String, discount: Double) {
+        self.keyword1 = group1.lowercased()
+        self.keyword2 = group2.lowercased()
+        self.discount = discount
+    }
+    
+    func apply(for items: [any SKU]) -> Int {
+        // split into groups
+        var group1Items: [SKU] = []
+        var group2Items: [SKU] = []
+        var normalItems: [SKU] = []
+        
+        for item in items {
+            let name = item.name.lowercased()
+            if name.contains(keyword1) {
+                group1Items.append(item)
+            } else if name.contains(keyword2) {
+                group2Items.append(item)
+            } else {
+                normalItems.append(item)
+            }
+        }
+        
+        // count min pair
+        let pairCount = min(group1Items.count, group2Items.count)
+        
+        var total = 0
+        
+        // calc discount pairs price
+        for i in 0..<pairCount {
+            let discounted1 = Int(Double(group1Items[i].price()) * (1.0 - discount))
+            let discounted2 = Int(Double(group2Items[i].price()) * (1.0 - discount))
+            total += discounted1 + discounted2
+        }
+        
+        // add remaining
+        for i in pairCount..<group1Items.count {
+            total += group1Items[i].price()
+        }
+        
+        for i in pairCount..<group2Items.count {
+            total += group2Items[i].price()
+        }
+        
+        for item in normalItems {
+            total += item.price()
+        }
+        
+        return total
+    }
+}
 
 class Receipt {
     private var scannedItems: [SKU] = []
@@ -90,7 +147,6 @@ class Receipt {
             return scannedItems.reduce(0) { $0 + $1.price() }
         }
     }
-
 
     func clear() {
         scannedItems.removeAll()
